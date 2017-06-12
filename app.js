@@ -43,7 +43,6 @@ bot.on('contacts-updated', contacts => {
   const groupInfo = contacts.find(i => i.NickName === NICK_NAME)
   // 尝试先从 groupInfo 中取用户名，如果不存在用之前的 toUserName （因为可能会出现更新的列表里没有组，而之前的组名还可以用）
   toUserName = groupInfo && groupInfo.UserName || toUserName
-  console.log(toUserName)
 })
 
 // 服务器相关设置
@@ -61,11 +60,11 @@ router.post('/hooks', async (ctx, next) => {
     const payload = ctx.request.fields
     if (payload.action === OPEN_PR_ACTION) {
       const prData = payload.pull_request
-      prQueue.push({ url: prData.html_url, name: prData.repo.name })
+      prQueue.push({ url: prData.html_url, name: prData.head.repo.name })
       if (toUserName) {
         // send this url to wechat
         prQueue.forEach(pr => {
-          bot.sendMsg(`${pr.name}: ${pr.url}`, toUserName)
+          bot.sendMsg(`${pr.name}: ${pr.url}`, 'filehelper')
             .catch(err => {
               bot.emit('error', err)
             })
