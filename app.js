@@ -61,7 +61,7 @@ router.post('/hooks', async (ctx, next) => {
     const payload = ctx.request.fields
     if (payload.action === OPEN_PR_ACTION) {
       const prData = payload.pull_request
-      prQueue.push({ url: prData.html_url, name: prData.name })
+      prQueue.push({ url: prData.html_url, name: prData.repo.name })
       if (toUserName) {
         // send this url to wechat
         prQueue.forEach(pr => {
