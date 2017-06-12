@@ -10,7 +10,7 @@ node_modules/
 .npm
 
 # Optional eslint cache
-.eslintcache
+.eslintcachenp
 
 # dotenv environment variables file
 .env

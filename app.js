@@ -8,7 +8,8 @@ const app = new Koa()
 const router = koaRouter()
 
 router.post('/hooks', async (ctx, next) => {
-  console.log(this.request.fields)
+  console.log(ctx.request.headers['X-GitHub-Event'])
+  console.log(ctx.request.fields)
   ctx.body = 'ok'
 })
 
