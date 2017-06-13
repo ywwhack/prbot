@@ -3,6 +3,24 @@ const Koa = require('koa')
 const koaRouter = require('koa-router')
 const convert = require('koa-convert')
 const body = require('koa-better-body')
+const { Logger, transports } = require('winston')
+
+/**
+ * logger
+ */
+const logger = new Logger({
+  transports: [
+    new transports.Console({
+      handleExceptions: true,
+      level: 'error'
+    }),
+    new transports.File({
+      filename: 'info.log',
+      level: 'info'
+    })
+  ],
+  exitOnError: false
+})
 
 /**
  * tcp 长连接，用于转发 pr 请求
@@ -12,13 +30,14 @@ let sockets = []
 
 server.on('connection', socket => {
   sockets.push(socket)
-  socket.on('end', () => {
+  socket.on('close', hadError => {
     sockets = sockets.filter(s => s !== socket)
+    if (hadError) logger.error('socket close error!')
   })
 })
 
 server.on('error', error => {
-  console.log(error.message)
+  logger.error(error.message)
 })
 
 server.listen(4000, () => {
@@ -33,6 +52,7 @@ const END_SYMBOL = '$$$$'
 router.post('/hooks', async (ctx, next) => {
   const event = ctx.request.headers['x-github-event']
   const payload = Object.assign({ 'x-github-event': event }, ctx.request.fields)
+  logger.info(`${event}, sender: ${payload.sender.login}`)
   sockets.forEach(socket => {
     socket.write(JSON.stringify(payload))
     socket.write(END_SYMBOL)
