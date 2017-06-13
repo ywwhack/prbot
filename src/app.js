@@ -9,8 +9,13 @@ bot.start()
 /**
  * 初始化消息队列
  */
-const GROUP_NAME = '大数据小小小小小小分队'
-const dtMsgQueue = new MessageQueue(bot, '文件传输助手')
+const filehelperMsgQueue = new MessageQueue(bot, '文件传输助手')
+const dtMsgQueue = new MessageQueue(bot, '大数据小小小小小小分队')
+// 创建 github 用户名与消息队列的映射关系
+const userMsgQueueMap = ['ywwhack', 'coolzjy'].reduce((result, remarkName) => {
+  result[remarkName] = new MessageQueue(bot, remarkName, true)
+  return result
+}, {})
 
 /**
  * uuid事件，参数为uuid，根据uuid生成二维码
@@ -43,8 +48,8 @@ const socket = net.createConnection({ port: 4000, host: '106.14.224.65' }, () =>
 })
 socket.setEncoding('utf8')
 
-let prQueue = []
 const PR_EVENT = 'pull_request'
+const PR_REVIEW_EVENT = 'pull_request_review'
 const OPEN_PR_ACTION = 'opened'
 const END_SYMBOL = '$$$$'
 
@@ -65,11 +70,13 @@ socket.on('data', data => {
   }
   
   const receiveEvent = payload['x-github-event']
-  // 只处理 pull_request，其余 hooks 直接返回
   if (receiveEvent === PR_EVENT) {
     if (payload.action === OPEN_PR_ACTION) {
       const prData = payload.pull_request
-      dtMsgQueue.send(`${prData.head.repo.name}: ${prData.html_url}`)
+      filehelperMsgQueue.send(`${prData.head.repo.name}：${prData.html_url}`)
     }
+  } else if (receiveEvent === PR_REVIEW_EVENT) {
+    const { review, pull_request } = payload
+    userMsgQueueMap[pull_request.user.login].send(`${review.user.login}：${review.body}`)
   }
 })
