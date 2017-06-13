@@ -15,6 +15,7 @@ const logger = new Logger({
       level: 'error'
     }),
     new transports.File({
+      handleExceptions: true,
       filename: 'info.log',
       level: 'info'
     })
@@ -53,10 +54,19 @@ router.post('/hooks', async (ctx, next) => {
   const event = ctx.request.headers['x-github-event']
   const payload = Object.assign({ 'x-github-event': event }, ctx.request.fields)
   logger.info(`${event}, sender: ${payload.sender.login}`)
-  sockets.forEach(socket => {
-    socket.write(JSON.stringify(payload))
-    socket.write(END_SYMBOL)
-  })
+  let socket = sockets[0]
+  let i = 0
+  while (socket) {
+    // 如果连接已关闭，删除 sockets 数组中对应的项
+    if (socket.destroyed) {
+      sockets.splice(i, 1)
+    } else {
+      socket.write(JSON.stringify(payload))
+      socket.write(END_SYMBOL)
+      i++
+    }
+    socket = sockets[i]
+  }
   ctx.body = 'ok'
 })
 
