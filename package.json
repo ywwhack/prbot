@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "start": "node app.js"
+    "dev": "node src/app.js",
+    "proxy": "node src/proxy.js"
   },
   "dependencies": {
     "koa": "^2.0.0",
