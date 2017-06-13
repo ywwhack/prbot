@@ -1,13 +1,8 @@
-const Koa = require('koa')
-const koaRouter = require('koa-router')
-const serve = require('koa-static')
-const convert = require('koa-convert')
-const body = require('koa-better-body')
+const net = require('net')
 const qrcode = require('qrcode-terminal')
-const fs = require('fs')
 
 const Wechat = require('wechat4u')
-let bot = new Wechat()
+const bot = new Wechat()
 bot.start()
 
 /**
@@ -17,6 +12,7 @@ bot.on('uuid', uuid => {
   qrcode.generate('https://login.weixin.qq.com/l/' + uuid, {
     small: true
   })
+ 
   console.log('二维码链接：', 'https://login.weixin.qq.com/qrcode/' + uuid)
 })
 
@@ -45,19 +41,36 @@ bot.on('contacts-updated', contacts => {
   toUserName = groupInfo && groupInfo.UserName || toUserName
 })
 
-// 服务器相关设置
-const app = new Koa()
-const router = koaRouter()
-let prQueue = []
+// 接受到 pr 相关事件
+const socket = net.createConnection({ port: 4000, host: '106.14.224.65' }, () => {
+  console.log('connected to server!')
+})
+socket.setEncoding('utf8')
 
+let prQueue = []
 const PR_EVENT = 'pull_request'
 const OPEN_PR_ACTION = 'opened'
+const END_SYMBOL = '$$$$'
 
-router.post('/hooks', async (ctx, next) => {
-  const receiveEvent = ctx.request.headers['x-github-event']
+let chunks = ''
+socket.on('data', data => {
+  chunks += data
+  let index = chunks.indexOf(END_SYMBOL)
+  if (index === -1) return
+
+  let payloadStr = chunks.slice(0, index)
+  let payload
+  try {
+    payload = JSON.parse(payloadStr)
+    chunks = chunks.slice(index + END_SYMBOL.length)
+  } catch (e) {
+    console.log('payload parse error!')
+    return
+  }
+  
+  const receiveEvent = payload['x-github-event']
   // 只处理 pull_request，其余 hooks 直接返回
   if (receiveEvent === PR_EVENT) {
-    const payload = ctx.request.fields
     if (payload.action === OPEN_PR_ACTION) {
       const prData = payload.pull_request
       prQueue.push({ url: prData.html_url, name: prData.head.repo.name })
@@ -73,13 +86,4 @@ router.post('/hooks', async (ctx, next) => {
       }
     }
   }
-  ctx.body = 'ok'
-})
-
-app.use(convert(body()))
-app.use(serve('.'))
-app.use(router.routes())
-
-app.listen(3000, () => {
-  console.log('listending on port 3000')
 })
