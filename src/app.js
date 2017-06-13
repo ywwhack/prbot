@@ -1,9 +1,16 @@
 const net = require('net')
 const qrcode = require('qrcode-terminal')
+const MessageQueue = require('./MessageQueue')
 
 const Wechat = require('wechat4u')
 const bot = new Wechat()
 bot.start()
+
+/**
+ * 初始化消息队列
+ */
+const GROUP_NAME = '大数据小小小小小小分队'
+const dtMsgQueue = new MessageQueue(bot, '文件传输助手')
 
 /**
  * uuid事件，参数为uuid，根据uuid生成二维码
@@ -28,17 +35,6 @@ bot.on('login', () => {
  */
 bot.on('error', err => {
   console.error('错误：', err.message)
-})
-
-/**
- * 联系人更新事件，参数为被更新的联系人列表
- */
-let toUserName // 需要发的群名
-const NICK_NAME = '大数据小小小小小小分队'
-bot.on('contacts-updated', contacts => {
-  const groupInfo = contacts.find(i => i.NickName === NICK_NAME)
-  // 尝试先从 groupInfo 中取用户名，如果不存在用之前的 toUserName （因为可能会出现更新的列表里没有组，而之前的组名还可以用）
-  toUserName = groupInfo && groupInfo.UserName || toUserName
 })
 
 // 接受到 pr 相关事件
@@ -73,17 +69,7 @@ socket.on('data', data => {
   if (receiveEvent === PR_EVENT) {
     if (payload.action === OPEN_PR_ACTION) {
       const prData = payload.pull_request
-      prQueue.push({ url: prData.html_url, name: prData.head.repo.name })
-      if (toUserName) {
-        // send this url to wechat
-        prQueue.forEach(pr => {
-          bot.sendMsg(`${pr.name}: ${pr.url}`, 'filehelper')
-            .catch(err => {
-              bot.emit('error', err)
-            })
-        })
-        prQueue = []
-      }
+      dtMsgQueue.send(`${prData.head.repo.name}: ${prData.html_url}`)
     }
   }
 })
