@@ -1,11 +1,15 @@
-const { filehelperMsgQueue, dtMsgQueue, userMsgQueueMap } = require('./bootstrap/messageQueues')
+const { filehelperMsgQueue, groupsQueueMap, userMsgQueueMap } = require('./bootstrap/messageQueues')
 const { PULL_REQUEST, PULL_REQUEST_REVIEW, PULL_REQUEST_REVIEW_COMMENT, ISSUE_COMMENT } = require('./constants/events')
+const { binding } = require('./bootstrap/binding')
 
 function processPullRequest (eventName, payload, wechatBot) {
   if (eventName === PULL_REQUEST) {
     if (payload.action === 'opened') {
       const prData = payload.pull_request
-      filehelperMsgQueue.send(`${prData.head.repo.name}：${prData.html_url}`)
+      const group = binding[payload.repository.name]
+      if (group && groupsQueueMap[group]) {
+        groupsQueueMap[group].send(`${prData.head.repo.name}：${prData.html_url}`)
+      }
     }
   }
 }

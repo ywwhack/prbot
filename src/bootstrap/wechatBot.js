@@ -2,11 +2,11 @@ const Wechat = require('wechat4u')
 const path = require('path')
 const fs = require('fs')
 
-const SYNC_DATA_PATH = path.resolve(__dirname, '../', 'sync-data.json')
+const SYNC_DATA = path.resolve(__dirname, '../data', 'sync-data.json')
 
 let wechatBot
 try {
-  wechatBot = new Wechat(require(SYNC_DATA_PATH))
+  wechatBot = new Wechat(require(SYNC_DATA))
 } catch (e) {
   wechatBot = new Wechat()
 }
@@ -27,7 +27,7 @@ if (wechatBot.PROP.uin) {
 wechatBot.on('login', () => {
   console.log('登录成功')
   // 保存数据，将数据序列化之后保存到任意位置
-  fs.writeFileSync(SYNC_DATA_PATH, JSON.stringify(wechatBot.botData))
+  fs.writeFileSync(SYNC_DATA, JSON.stringify(wechatBot.botData))
 })
 
 /**
@@ -36,7 +36,7 @@ wechatBot.on('login', () => {
 wechatBot.on('logout', () => {
   console.log('登出成功')
   // 清除数据
-  fs.unlinkSync(SYNC_DATA_PATH)
+  fs.unlinkSync(SYNC_DATA)
 })
 
 module.exports = wechatBot

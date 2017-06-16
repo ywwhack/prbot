@@ -2,12 +2,7 @@ const fs = require('fs')
 const path = require('path')
 const { promisify } = require('util')
 const wechatBot = require('./bootstrap/wechatBot')
-
-const BINDING_FILE = path.resolve(__dirname, 'binding.json')
-// 如果 binding.json 文件不存在，先创建一个空的 binding.json 文件
-if (!fs.existsSync(BINDING_FILE)) {
-  fs.writeFileSync(BINDING_FILE, '{}')
-}
+const { binding, BINDING_FILE } = require('./bootstrap/binding')
 
 const DIRECTIVES = {
   addRepo: /\w*add_repo:(.+)/,
@@ -34,9 +29,8 @@ async function handleAddRepo (match, msg) {
   try {
     const groups = await wechatBot.batchGetContact([{ UserName: GroupUserName }])
     const groupName = groups[0].NickName
-    const json = JSON.parse(await promisify(fs.readFile)(BINDING_FILE, 'utf8'))
-    json[repoName] = groupName
-    await promisify(fs.writeFile)(BINDING_FILE, JSON.stringify(json, null, '  '))
+    binding[repoName] = groupName
+    await promisify(fs.writeFile)(BINDING_FILE, JSON.stringify(binding, null, '  '))
     await wechatBot.sendMsg(`${repoName} 已成功添加群通知`, GroupUserName)
   } catch (e) {
     // TODO: logger
