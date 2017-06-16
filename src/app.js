@@ -3,7 +3,6 @@
  */
 const wechatBot = require('./bootstrap/wechatBot')
 require('./bootstrap/messageQueues')
-wechatBot.start()
 
 const net = require('net')
 const qrcode = require('qrcode-terminal')
@@ -27,13 +26,6 @@ wechatBot.on('uuid', uuid => {
   })
  
   console.log('二维码链接：', 'https://login.weixin.qq.com/qrcode/' + uuid)
-})
-
-/**
- * 登录成功事件
- */
-wechatBot.on('login', () => {
-  console.log('登录成功')
 })
 
 /**
