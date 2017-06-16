@@ -3,6 +3,7 @@
  */
 const wechatBot = require('./bootstrap/wechatBot')
 require('./bootstrap/messageQueues')
+require('./binding')
 
 const net = require('net')
 const qrcode = require('qrcode-terminal')
