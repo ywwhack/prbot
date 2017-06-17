@@ -2,7 +2,6 @@
  * 初始化 wechat-bot 以及消息队列
  */
 const wechatBot = require('./bootstrap/wechatBot')
-require('./bootstrap/messageQueues')
 require('./message')
 
 const net = require('net')
