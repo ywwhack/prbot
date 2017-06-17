@@ -1,25 +1,30 @@
-class MessageQueue {
-  constructor (wechatBot, nameToSearch, useRemarkName = false) {
-    this.wechatBot = wechatBot
-    this.UserName = null
-    this.messages = []
+const wechatBot = require('../bootstrap/wechatBot')
 
-    wechatBot.on('contacts-updated', contacts => {
-      const groupInfo = contacts.find(i => i[useRemarkName ? 'RemarkName' : 'NickName'] === nameToSearch)
-      // 尝试先从 groupInfo 中取用户名，如果不存在用之前的 UserName （因为可能会出现更新的列表里没有组，而之前的组名还可以用）
-      this.UserName = groupInfo && groupInfo.UserName || this.UserName
-    })
+const messagesMap = {} // 每个用户名对应一个消息队列，用于控制消息的发送
+
+wechatBot.on('contacts-updated', () => {
+  Object.keys(messagesMap).forEach(to => {
+    _send(to)
+  })
+})
+
+const MessageQueue = {
+  send (message, to) {
+    // 将该消息加入到对应的消息队列中
+    messagesMap[to] = messagesMap[to] || []
+    messagesMap[to].push(message)
+
+    _send(to)
   }
+}
 
-  send (message) {
-    const { messages, UserName, wechatBot } = this
-    messages.push(message)
-    if (UserName) {
-      messages.forEach(message => {
-        wechatBot.sendMsg(message, UserName)
-      })
-      this.messages = []
-    }
+function _send (to) {
+  const contact = Object.values(wechatBot.contacts).find(i => i.NickName === to || i.RemarkName === to)
+  if (contact) {
+    messagesMap[to].forEach(message => {
+      wechatBot.sendMsg(message, contact.UserName)
+    })
+    delete messagesMap[to]
   }
 }
 
