@@ -7,13 +7,13 @@ require('./message')
 const net = require('net')
 const qrcode = require('qrcode-terminal')
 const WebhookProcess = require('./lib/WebhookProcess')
-const processMiddleware = require('./processMiddleware')
+const hookMiddlewares = require('./hookMiddlewares')
 
 /**
  * 初始化 webhook 处理器，并加载相关处理函数
  */
 const webhookProcess = new WebhookProcess(wechatBot)
-processMiddleware.forEach(middleware => {
+hookMiddlewares.forEach(middleware => {
 	webhookProcess.use(...middleware)
 })
 
