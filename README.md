@@ -5,7 +5,7 @@
 ![](img/step1.png)
 
 2. 填入如下内容  
-url: http://106.14.224.65:5000/hooks  
+url: http://106.14.224.65:3000/hooks  
 content-type 选 application/json  
 触发事件选择 Send me everything  
 最后点 Add webhook
