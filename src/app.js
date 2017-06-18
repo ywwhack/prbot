@@ -1,4 +1,14 @@
 /**
+ * 如果 /data 文件夹不存在就创建一个
+ */
+const fs = require('fs')
+const path = require('path')
+const DATA_DIR = path.resolve(__dirname, 'data')
+if (!fs.existsSync(DATA_DIR)) {
+  fs.mkdirSync(DATA_DIR)
+}
+
+/**
  * 初始化 wechat-bot 以及消息队列
  */
 const wechatBot = require('./bootstrap/wechatBot')
