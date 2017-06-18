@@ -3,13 +3,15 @@ const { binding } = require('./bootstrap/binding')
 const MessageQueue = require('./lib/MessageQueue')
 
 function processPullRequest (payload, wechatBot) {
-  if (payload.action === 'opened') {
+  const allowedActions = ['opened', 'synchronize']
+  const action = allowedActions.find(i => i === payload.action)
+  if (action) {
     const prData = payload.pull_request
     const group = binding[payload.repository.name]
     if (group) {
       MessageQueue.send(
         payload.pull_request.user.login 
-        + ' has open a pull request in '
+        + ' has ' + action + ' a pull request in '
         + payload.repository.name
         + ', see: ' + payload.pull_request.html_url,
       group)
