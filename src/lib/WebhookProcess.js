@@ -16,8 +16,8 @@ class WebhookProcess {
     const fns = eventMap[eventName]
     if (fns) {
       fns.forEach(fn => {
-        // 每个 fn 接受两个参数 (eventName, payload)
-        fn(eventName, payload, wechatBot)
+        // 每个 fn 接受两个参数 (payload, wechatBot)
+        fn(payload, wechatBot)
       })
     }
   }
