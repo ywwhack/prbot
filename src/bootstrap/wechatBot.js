@@ -27,7 +27,10 @@ if (wechatBot.PROP.uin) {
 wechatBot.on('login', () => {
   console.log('登录成功')
   // 保存数据，将数据序列化之后保存到任意位置
-  fs.writeFileSync(SYNC_DATA, JSON.stringify(wechatBot.botData))
+  if (!fs.existsSync(SYNC_DATA)) {
+    const fd = fs.openSync(SYNC_DATA, 'w')
+    fs.writeSync(fd, JSON.stringify(wechatBot.botData, null, '  '))
+  }
 })
 
 /**
