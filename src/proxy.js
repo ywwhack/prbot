@@ -25,13 +25,13 @@ const logger = new Logger({
     new transports.File({
       timestamp: dateFormatter,
       name: 'file.info',
-      filename: path.resolve(LOGS_DIR, 'info'),
+      filename: path.resolve(LOGS_DIR, 'info.log'),
       level: 'info'
     }),
     new transports.File({
       timestamp: dateFormatter,
       name: 'file.error',
-      filename: path.resolve(LOGS_DIR, 'error'),
+      filename: path.resolve(LOGS_DIR, 'error.log'),
       level: 'error',
       handleExceptions: true
     })
