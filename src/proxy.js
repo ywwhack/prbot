@@ -11,7 +11,7 @@ const moment = require('moment')
 /**
  * logger
  */
-const LOGS_DIR = path.resolve(__dirname. 'logs')
+const LOGS_DIR = path.resolve(__dirname, '..', 'logs')
 if (!fs.existsSync(LOGS_DIR)) {
   fs.mkdirSync(LOGS_DIR)
 }
