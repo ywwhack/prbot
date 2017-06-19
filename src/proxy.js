@@ -69,7 +69,7 @@ const END_SYMBOL = '$$$$'
 router.post('/hooks', async (ctx, next) => {
   const event = ctx.request.headers['x-github-event']
   const payload = Object.assign({ 'x-github-event': event }, ctx.request.fields)
-  const { event, sender, repository } = payload
+  const { sender, repository } = payload
   const message = `${sender.login} has ${event} on ${repository.name}`
   logger.info(message)
   let socket = sockets[0]
