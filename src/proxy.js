@@ -18,9 +18,13 @@ let sockets = []
 
 server.on('connection', socket => {
   sockets.push(socket)
-  socket.on('close', hadError => {
+
+  sockets.on('error', error => {
+    logger.error(error.message)
+  })
+  
+  socket.on('close', () => {
     sockets = sockets.filter(s => s !== socket)
-    if (hadError) logger.error('socket close error!')
   })
 })
 

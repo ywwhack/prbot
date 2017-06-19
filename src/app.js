@@ -60,31 +60,45 @@ wechatBot.on('error', err => {
 })
 
 // 接受到 pr 相关事件
-const socket = net.createConnection({ port: 4000, host: '106.14.224.65' }, () => {
-  console.log('connected to server!')
-})
-socket.setEncoding('utf8')
+function initSocket () {
+  const socket = net.createConnection({ port: 4000, host: '106.14.224.65' }, () => {
+    console.log('connected to server!')
+  })
+  socket.setEncoding('utf8')
 
-const PR_EVENT = 'pull_request'
-const PR_REVIEW_EVENT = 'pull_request_review'
-const OPEN_PR_ACTION = 'opened'
-const END_SYMBOL = '$$$$'
+  const PR_EVENT = 'pull_request'
+  const PR_REVIEW_EVENT = 'pull_request_review'
+  const OPEN_PR_ACTION = 'opened'
+  const END_SYMBOL = '$$$$'
 
-let chunks = ''
-socket.on('data', data => {
-  chunks += data
-  let index = chunks.indexOf(END_SYMBOL)
-  if (index === -1) return
+  let chunks = ''
+  socket.on('data', data => {
+    chunks += data
+    let index = chunks.indexOf(END_SYMBOL)
+    if (index === -1) return
 
-  let payloadStr = chunks.slice(0, index)
-  let payload
-  try {
-    payload = JSON.parse(payloadStr)
-    chunks = chunks.slice(index + END_SYMBOL.length)
-  } catch (e) {
-    logger.warn('payload parse error!')
-    return
-  }
-  
-	webhookProcess.process(payload)
-})
+    let payloadStr = chunks.slice(0, index)
+    let payload
+    try {
+      payload = JSON.parse(payloadStr)
+      chunks = chunks.slice(index + END_SYMBOL.length)
+    } catch (e) {
+      logger.warn('payload parse error!')
+      return
+    }
+    
+    webhookProcess.process(payload)
+  })
+
+  socket.on('error', error => {
+    logger.error(error.message)
+    socket.destroy()
+  })
+
+  socket.on('end', () => {
+    // 如果错误导致 socket 关闭，重新建立一个新连接
+    initSocket()
+  })
+}
+
+initSocket()
