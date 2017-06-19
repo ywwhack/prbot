@@ -10,9 +10,10 @@ if (!fs.existsSync(LOGS_DIR)) {
 }
 
 function dateFormatter () {
-  return moment().format('MM/DD h:mm:ss')
+  return moment().format('MM/DD HH:mm:ss')
 }
 
+exports.dateFormatter = dateFormatter
 exports.initLogger = function initLogger (type) {
   const logger = new Logger({
     transports: [

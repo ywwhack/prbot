@@ -12,10 +12,11 @@ if (!fs.existsSync(DATA_DIR)) {
  * logger
  */
 const { transports } = require('winston')
-const { initLogger } = require('./logger')
+const { initLogger, dateFormatter } = require('./logger')
 const { LOGS_DIR } = require('./constants/paths')
 const logger = initLogger('app')
 logger.add(transports.File, {
+  timestamp: dateFormatter,
   name: 'file.warn',
   filename: path.resolve(LOGS_DIR, 'app-warn.log'),
   level: 'warn',
