@@ -9,6 +9,19 @@ if (!fs.existsSync(DATA_DIR)) {
 }
 
 /**
+ * logger
+ */
+const { transports } = require('winston')
+const { initLogger } = require('./logger')
+const { LOGS_DIR } = require('./constants/paths')
+const logger = initLogger('app')
+logger.add(transports.File, {
+  name: 'file.warn',
+  filename: path.resolve(LOGS_DIR, 'app-warn.log'),
+  level: 'warn',
+})
+
+/**
  * 初始化 wechat-bot 以及消息队列
  */
 const wechatBot = require('./bootstrap/wechatBot')
@@ -42,7 +55,7 @@ wechatBot.on('uuid', uuid => {
  * 错误事件，参数一般为Error对象
  */
 wechatBot.on('error', err => {
-  console.error('错误：', err.message)
+  logger.warn('错误：', err.message)
 })
 
 // 接受到 pr 相关事件
@@ -68,7 +81,7 @@ socket.on('data', data => {
     payload = JSON.parse(payloadStr)
     chunks = chunks.slice(index + END_SYMBOL.length)
   } catch (e) {
-    console.log('payload parse error!')
+    logger.warn('payload parse error!')
     return
   }
   
