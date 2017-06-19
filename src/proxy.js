@@ -21,6 +21,7 @@ server.on('connection', socket => {
 
   socket.on('error', error => {
     logger.error(error.message)
+    socket.destroy()
   })
 
   socket.on('close', () => {

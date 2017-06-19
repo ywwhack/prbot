@@ -63,6 +63,15 @@ wechatBot.on('error', err => {
 function initSocket () {
   const socket = net.createConnection({ port: 4000, host: '106.14.224.65' }, () => {
     console.log('connected to server!')
+
+    // issue -> read ECONNRESET
+    // TODO: 隔断时间检查连接是否还存在，不存在重新创建一个
+    setInterval(() => {
+      if (socket.destroyed) {
+        console.log('reconnect to server ...')
+        initSocket()
+      }
+    }, 5000)
   })
   socket.setEncoding('utf8')
 
@@ -96,6 +105,7 @@ function initSocket () {
   })
 
   socket.on('end', () => {
+    console.log('reconnect to server ...')
     // 如果错误导致 socket 关闭，重新建立一个新连接
     initSocket()
   })
