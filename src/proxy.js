@@ -19,10 +19,10 @@ let sockets = []
 server.on('connection', socket => {
   sockets.push(socket)
 
-  sockets.on('error', error => {
+  socket.on('error', error => {
     logger.error(error.message)
   })
-  
+
   socket.on('close', () => {
     sockets = sockets.filter(s => s !== socket)
   })
