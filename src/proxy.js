@@ -4,20 +4,36 @@ const koaRouter = require('koa-router')
 const convert = require('koa-convert')
 const body = require('koa-better-body')
 const { Logger, transports } = require('winston')
+const fs = require('fs')
+const path = require('path')
+const moment = require('moment')
 
 /**
  * logger
  */
+const LOGS_DIR = path.resolve(__dirname. 'logs')
+if (!fs.existsSync(LOGS_DIR)) {
+  fs.mkdirSync(LOGS_DIR)
+}
+
+function dateFormatter () {
+  return moment().format('MM/DD h:mm:ss')
+}
+
 const logger = new Logger({
   transports: [
-    new transports.Console({
-      handleExceptions: true,
-      level: 'error'
+    new transports.File({
+      timestamp: dateFormatter,
+      name: 'file.info',
+      filename: path.resolve(LOGS_DIR, 'info'),
+      level: 'info'
     }),
     new transports.File({
-      handleExceptions: true,
-      filename: 'info.log',
-      level: 'info'
+      timestamp: dateFormatter,
+      name: 'file.error',
+      filename: path.resolve(LOGS_DIR, 'error'),
+      level: 'error',
+      handleExceptions: true
     })
   ],
   exitOnError: false
@@ -53,7 +69,9 @@ const END_SYMBOL = '$$$$'
 router.post('/hooks', async (ctx, next) => {
   const event = ctx.request.headers['x-github-event']
   const payload = Object.assign({ 'x-github-event': event }, ctx.request.fields)
-  logger.info(`${event}, sender: ${payload.sender.login}`)
+  const { event, sender, repository } = payload
+  const message = `${sender.login} has ${event} on ${repository.name}`
+  logger.info(message)
   let socket = sockets[0]
   let i = 0
   while (socket) {
@@ -67,7 +85,7 @@ router.post('/hooks', async (ctx, next) => {
     }
     socket = sockets[i]
   }
-  ctx.body = 'ok'
+  ctx.body = message
 })
 
 app.use(convert(body()))
