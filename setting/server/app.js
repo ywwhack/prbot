@@ -26,28 +26,26 @@ if (!fs.existsSync(USERS_PATH)) {
   fs.writeSync(fd, '{}')
 }
 
+router.get('/code', async (ctx, next) => {
+  const code = ctx.request.query.code
+  const { client_id, client_secret } = oAuthConfig
+  const data = await fetch(`https://github.com/login/oauth/access_token?client_id=${client_id}&&client_secret=${client_secret}&&code=${code}`, {
+    method: 'POST',
+    headers: { accept: 'application/json' }
+  })
+    .then(res => res.json())
+  ctx.cookies.set('github_session', data.access_token)
+  ctx.redirect('http://localhost:8080')
+})
+
 router.get('/auth', async (ctx, next) => {
   const githubSession = ctx.cookies.get('github_session')
   if (githubSession) {
-    ctx.body = 'auth success'
+    ctx.body = githubSession
   } else {
     // redirect to get github_session
-    ctx.redirect(`http://github.com/login/oauth/authorize?client_id=${oAuthConfig.client_id}`)
+    ctx.status = 401
   }
-})
-
-router.get('/code', async (ctx, next) => {
-  const code = this.request.query.code
-  const { client_id, client_secret } = oAuthConfig
-  console.log(code)
-  const data = await fetch('https://github.com/login/oauth/access_token', {
-    method: 'POST',
-    body: { client_id, client_secret, code } 
-  })
-    .then(res => res.json())
-  console.log(data)
-  ctx.cookies.set('github_session', data.github_session)
-  ctx.body = 'access session success'
 })
 
 app.use(convert(cors({
