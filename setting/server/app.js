@@ -6,6 +6,7 @@ const path = require('path')
 const fs = require('fs')
 const cors = require('koa-cors')
 const fetch = require('node-fetch')
+const { promisify } = require('util')
 
 const app = new Koa()
 const router = koaRouter()
@@ -25,21 +26,30 @@ if (!fs.existsSync(USERS_PATH)) {
   const fd = fs.openSync(USERS_PATH, 'w')
   fs.writeSync(fd, '{}')
 }
+const usersModel = require(USERS_PATH)
 
 router.get('/code', async (ctx, next) => {
   const code = ctx.request.query.code
   const { client_id, client_secret } = oAuthConfig
-  const data = await fetch(`https://github.com/login/oauth/access_token?client_id=${client_id}&&client_secret=${client_secret}&&code=${code}`, {
+  // 获取 github_token
+  const { access_token } = await fetch(`https://github.com/login/oauth/access_token?client_id=${client_id}&&client_secret=${client_secret}&&code=${code}`, {
     method: 'POST',
     headers: { accept: 'application/json' }
   })
     .then(res => res.json())
-  ctx.cookies.set('github_session', data.access_token)
+  ctx.cookies.set('github_token', access_token)
+
+  // 获取 githun 用户信息
+  const { id, login } = await fetch(`https://api.github.com/user?access_token=${access_token}`).then(res => res.json())
+  usersModel[login] = { id, access_token }
+  await promisify(fs.writeFile)(USERS_PATH, JSON.stringify(usersModel, null, '  '))
+  
+  // TODO: 重定向到原来的地址
   ctx.redirect('http://localhost:8080')
 })
 
 router.get('/auth', async (ctx, next) => {
-  const githubSession = ctx.cookies.get('github_session')
+  const githubSession = ctx.cookies.get('github_token')
   if (githubSession) {
     ctx.body = githubSession
   } else {
