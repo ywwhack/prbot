@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "node src/app.js",
-    "proxy": "node src/proxy.js"
+    "message": "node src/notify/app.js",
+    "proxy": "node src/notify/proxy.js"
   },
   "dependencies": {
     "koa": "^2.0.0",

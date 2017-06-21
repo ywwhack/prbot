@@ -3,7 +3,7 @@
  */
 const fs = require('fs')
 const path = require('path')
-const DATA_DIR = path.resolve(__dirname, 'data')
+const DATA_DIR = path.resolve(process.cwd(), 'data')
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR)
 }

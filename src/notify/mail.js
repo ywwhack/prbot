@@ -1,8 +1,10 @@
 const nodemailer = require('nodemailer')
+const path = require('path')
 
 let mailInstacne = {}
 try {
-  const auth = require('../mail.config.js')
+  const MAIL_CONFIG_PATH = path.resolve(process.cwd(), 'mail.config.js')
+  const auth = require(MAIL_CONFIG_PATH)
   mailInstacne = nodemailer.createTransport({
     host: 'smtp.qq.com',
     port: 465,

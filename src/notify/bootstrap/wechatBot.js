@@ -2,7 +2,7 @@ const Wechat = require('wechat4u')
 const path = require('path')
 const fs = require('fs')
 
-const SYNC_DATA = path.resolve(__dirname, '../data', 'sync-data.json')
+const SYNC_DATA = path.resolve(process.cwd(), 'data', 'sync-data.json')
 
 let wechatBot
 try {
