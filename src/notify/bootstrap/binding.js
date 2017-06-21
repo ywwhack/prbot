@@ -1,7 +1,7 @@
 const fs = require('fs')
 const path = require('path')
 
-const BINDING_FILE = path.resolve(__dirname, '../data', 'binding.json')
+const BINDING_FILE = path.resolve(process.cwd(), 'data', 'binding.json')
 
 let binding = {}
 if (!fs.existsSync(BINDING_FILE)) {
