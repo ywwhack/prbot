@@ -3,16 +3,19 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "message": "node src/notify/app.js",
-    "proxy": "node src/notify/proxy.js"
+    "message": "node notify/app.js",
+    "proxy": "node notify/proxy.js",
+    "setting:server": "node setting/server/app.js"
   },
   "dependencies": {
     "koa": "^2.0.0",
     "koa-better-body": "^3.0.2",
     "koa-convert": "^1.2.0",
+    "koa-cors": "0.0.16",
     "koa-router": "^7.0.1",
     "koa-static": "^3.0.0",
     "moment": "^2.18.1",
+    "node-fetch": "^1.7.1",
     "nodemailer": "^4.0.1",
     "qrcode-terminal": "^0.11.0",
     "request": "^2.81.0",
