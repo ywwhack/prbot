@@ -50,8 +50,8 @@ router.get('/code', async (ctx, next) => {
       notify: {
         state: true,
         time: [
-          new Date(2017, 6, 23, 0, 0, 0),
-          new Date(2017, 6, 23, 23, 59, 59)
+          '00:00',
+          '24:00'
         ]
       }
     }
@@ -84,6 +84,7 @@ router.post('/setting/user/:name', async (ctx, next) => {
   const data = ctx.request.fields
   if (usersModel[name]) {
     usersModel[name].notify = Object.assign(usersModel[name].notify, data)
+    await promisify(fs.writeFile)(USERS_PATH, JSON.stringify(usersModel, null, '  '))
     ctx.body = '更新成功'
   } else {
     ctx.body = '用户不存在'

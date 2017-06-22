@@ -4,7 +4,8 @@ const MessageQueue = require('./lib/MessageQueue')
 
 const { createIfNotExist } = require('../share/utils')
 const { USERS_PATH } = require('../share/paths')
-const usersModel = require(USERS_PATH)
+const { promisify } = require('util')
+const fs = require('fs')
 
 function processPullRequest (payload, wechatBot) {
   const allowedActions = ['opened', 'synchronize']
@@ -23,12 +24,13 @@ function processPullRequest (payload, wechatBot) {
   }
 }
 
-function processPullRequestReview (payload, wechatBot) {
+async function processPullRequestReview (payload, wechatBot) {
   const { review, pull_request } = payload
   const { state, user: { login: proposer } } = review
   const owner = pull_request.user.login
+  const notify = await canNotify(owner)
   // 只有 state 不是 pedding，并且不是自己的评论才会转发
-  if (state !== 'pedding' && proposer !== owner && canNotify(owner)) {
+  if (state !== 'pedding' && proposer !== owner && notify) {
     MessageQueue.send(
       proposer + ' has ' + state + ' on ' + payload.repository.name 
       + ', see: ' + review.html_url,
@@ -36,11 +38,12 @@ function processPullRequestReview (payload, wechatBot) {
   }
 }
 
-function processIssueComment (payload, wechatBot) {
+async function processIssueComment (payload, wechatBot) {
   const { comment, issue } = payload
   const { title, user: { login: owner } } = issue
   const proposer = comment.user.login
-  if (proposer !== owner && canNotify(owner)) {
+  const notify = await canNotify(owner)
+  if (proposer !== owner && notify) {
     MessageQueue.send(
       proposer + ' has comment on ' + payload.repository.name + '\'s issue'
       + ', see: ' + comment.html_url,
@@ -49,11 +52,13 @@ function processIssueComment (payload, wechatBot) {
 }
 
 // 根据用户的通知设置（是否开启通知／通知时段），判断此时是否发送通知
-function canNotify (user) {
+async function canNotify (user) {
+  // TODO: 使用数据库存储
+  const usersModel = JSON.parse(await promisify(fs.readFile)(USERS_PATH))
   if (usersModel[user]) {
     const { state, time: [ start, end ] } = usersModel[user].notify
-    const currentHour = new Data().getHours()
-    if (!notify.state) {
+    const currentHour = new Date().getHours()
+    if (!state) {
       // 不开启通知
       return false
     } else if (currentHour < parseInt(start) || currentHour > parseInt(end)) {
