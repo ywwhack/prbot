@@ -7,6 +7,7 @@ const fs = require('fs')
 const cors = require('koa-cors')
 const fetch = require('node-fetch')
 const { promisify } = require('util')
+const { createIfNotExist } = require('../../share/utils')
 
 const app = new Koa()
 const router = koaRouter()
@@ -22,10 +23,7 @@ if (!fs.existsSync(OAUTH_PATH)) {
 }
 
 const USERS_PATH = path.resolve(process.cwd(), 'data', 'users.json')
-if (!fs.existsSync(USERS_PATH)) {
-  const fd = fs.openSync(USERS_PATH, 'w')
-  fs.writeSync(fd, '{}')
-}
+createIfNotExist(USERS_PATH, {})
 const usersModel = require(USERS_PATH)
 
 router.get('/code', async (ctx, next) => {

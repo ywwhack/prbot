@@ -1,6 +1,7 @@
 const Wechat = require('wechat4u')
 const path = require('path')
 const fs = require('fs')
+const { createIfNotExist } = require('../../share/utils')
 
 const SYNC_DATA = path.resolve(process.cwd(), 'data', 'sync-data.json')
 
@@ -26,11 +27,8 @@ if (wechatBot.PROP.uin) {
  */
 wechatBot.on('login', () => {
   console.log('登录成功')
-  // 保存数据，将数据序列化之后保存到任意位置
-  if (!fs.existsSync(SYNC_DATA)) {
-    const fd = fs.openSync(SYNC_DATA, 'w')
-    fs.writeSync(fd, JSON.stringify(wechatBot.botData, null, '  '))
-  }
+  // 保存数据，将数据序列化之后保存到指定位置
+  createIfNotExist(SYNC_DATA, wechatBot.botData)
 })
 
 /**

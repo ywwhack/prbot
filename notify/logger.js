@@ -3,11 +3,10 @@ const fs = require('fs')
 const path = require('path')
 const moment = require('moment')
 const { LOGS_DIR } = require('./constants/paths')
+const { createIfNotExist } = require('../share/utils')
 const mailInstance = require('./mail')
 
-if (!fs.existsSync(LOGS_DIR)) {
-  fs.mkdirSync(LOGS_DIR)
-}
+createIfNotExist(LOGS_DIR)
 
 function dateFormatter () {
   return moment().format('MM/DD HH:mm:ss')
