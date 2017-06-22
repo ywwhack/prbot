@@ -2,7 +2,7 @@ const { Logger, transports } = require('winston')
 const fs = require('fs')
 const path = require('path')
 const moment = require('moment')
-const { LOGS_DIR } = require('./constants/paths')
+const { LOGS_DIR } = require('../share/paths')
 const { createIfNotExist } = require('../share/utils')
 const mailInstance = require('./mail')
 

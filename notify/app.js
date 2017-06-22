@@ -12,7 +12,7 @@ createIfNotExist(DATA_DIR)
  */
 const { transports } = require('winston')
 const { initLogger, dateFormatter } = require('./logger')
-const { LOGS_DIR } = require('./constants/paths')
+const { LOGS_DIR } = require('../share/paths')
 const logger = initLogger('app')
 logger.add(transports.File, {
   timestamp: dateFormatter,

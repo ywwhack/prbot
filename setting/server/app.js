@@ -8,6 +8,7 @@ const cors = require('koa-cors')
 const fetch = require('node-fetch')
 const { promisify } = require('util')
 const { createIfNotExist } = require('../../share/utils')
+const { USERS_PATH } = require('../../share/paths')
 
 const app = new Koa()
 const router = koaRouter()
@@ -22,7 +23,6 @@ if (!fs.existsSync(OAUTH_PATH)) {
   oAuthConfig = require(OAUTH_PATH)
 }
 
-const USERS_PATH = path.resolve(process.cwd(), 'data', 'users.json')
 createIfNotExist(USERS_PATH, {})
 const usersModel = require(USERS_PATH)
 
@@ -39,7 +39,23 @@ router.get('/code', async (ctx, next) => {
 
   // 获取 githun 用户信息
   const { id, login } = await fetch(`https://api.github.com/user?access_token=${access_token}`).then(res => res.json())
-  usersModel[login] = { id, access_token }
+  if (usersModel[login]) {
+    // 如果之前用户已经存在，则只更新 session
+    usersModel[login].access_token = access_token
+  } else {
+    // 否则保存一个新的用户信息
+    usersModel[login] = {
+      id,
+      access_token,
+      notify: {
+        state: true,
+        time: [
+          new Date(2017, 6, 23, 0, 0, 0),
+          new Date(2017, 6, 23, 23, 59, 59)
+        ]
+      }
+    }
+  }
   await promisify(fs.writeFile)(USERS_PATH, JSON.stringify(usersModel, null, '  '))
   
   // TODO: 重定向到原来的地址
@@ -47,12 +63,30 @@ router.get('/code', async (ctx, next) => {
 })
 
 router.get('/auth', async (ctx, next) => {
-  const githubSession = ctx.cookies.get('github_token')
-  if (githubSession) {
-    ctx.body = githubSession
+  const githubToken = ctx.cookies.get('github_token')
+  if (githubToken) {
+    let body = {}
+    for (let name in usersModel) {
+      if (usersModel[name].access_token === githubToken) {
+        body = Object.assign({ name }, usersModel[name])
+        break
+      }
+    }
+    ctx.body = body
   } else {
     // redirect to get github_session
     ctx.status = 401
+  }
+})
+
+router.post('/setting/user/:name', async (ctx, next) => {
+  const { name } = ctx.params
+  const data = ctx.request.fields
+  if (usersModel[name]) {
+    usersModel[name].notify = Object.assign(usersModel[name].notify, data)
+    ctx.body = '更新成功'
+  } else {
+    ctx.body = '用户不存在'
   }
 })
 
