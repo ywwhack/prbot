@@ -29,8 +29,8 @@ async function processPullRequestReview (payload, wechatBot) {
   const { state, user: { login: proposer } } = review
   const owner = pull_request.user.login
   const notify = await canNotify(owner)
-  // 只有 state 不是 pedding，并且不是自己的评论才会转发
-  if (state !== 'pedding' && proposer !== owner && notify) {
+  // 只有 state 不是 pending，并且不是自己的评论才会转发
+  if (state !== 'pending' && proposer !== owner && notify) {
     MessageQueue.send(
       proposer + ' has ' + state + ' on ' + payload.repository.name 
       + ', see: ' + review.html_url,
