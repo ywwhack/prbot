@@ -8,7 +8,7 @@ const path = require('path')
 const fs = require('fs')
 const cors = require('koa-cors')
 const fetch = require('node-fetch')
-const User = require('../../Model/User')
+const User = require('../../model/User')
 
 const app = new Koa()
 const router = koaRouter()

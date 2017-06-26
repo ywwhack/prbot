@@ -7,10 +7,12 @@ const UserSchema = mongoose.Schema({
   access_token: String,
   notify: {
     state: { type: Boolean, default: true },
-    time: [
-      start: { type: String, default: '10:00' },
-      end: { type: String, default: '20:00' }
-    ]
+    time: {
+      type: Array,
+      default () {
+        return ['10:00', '20:00']
+      }
+    }
   }
 }, {
   toJSON: toJSON()

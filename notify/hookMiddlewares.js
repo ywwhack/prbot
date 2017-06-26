@@ -52,19 +52,16 @@ async function processIssueComment (payload, wechatBot) {
 // 根据用户的通知设置（是否开启通知／通知时段），判断此时是否发送通知
 async function canNotify (name) {
   try {
-    const user = await User.findOne({ name })
-    const { state, time: [ start, end ] } = user
+    const user = (await User.findOne({ name })).toJSON()
+    const { state, time: [ start, end ] } = user.notify
     const currentHour = new Date().getHours()
-    if (!state) {
-      // 不开启通知
-      return false
-    } else if (currentHour < parseInt(start) || currentHour > parseInt(end)) {
-      // 不在通知时段内
-      return false
-    } else {
+    if (state && currentHour >= parseInt(start) && currentHour < parseInt(end)) {
       return true
+    } else {
+      return false
     }
   } catch (e) {
+    console.log('notify error: ', e)
     return true
   }
 }
