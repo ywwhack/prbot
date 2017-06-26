@@ -1,4 +1,9 @@
 /**
+ * 连接数据库
+ */
+require('../share/setup_mongoose')
+
+/**
  * 如果 /data 文件夹不存在就创建一个
  */
 const fs = require('fs')

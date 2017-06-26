@@ -1,3 +1,5 @@
+require('../../share/setup_mongoose')
+
 const Koa = require('koa')
 const koaRouter = require('koa-router')
 const convert = require('koa-convert')
@@ -6,9 +8,7 @@ const path = require('path')
 const fs = require('fs')
 const cors = require('koa-cors')
 const fetch = require('node-fetch')
-const { promisify } = require('util')
-const { createIfNotExist } = require('../../share/utils')
-const { USERS_PATH } = require('../../share/paths')
+const User = require('../../Model/User')
 
 const app = new Koa()
 const router = koaRouter()
@@ -23,9 +23,6 @@ if (!fs.existsSync(OAUTH_PATH)) {
   oAuthConfig = require(OAUTH_PATH)
 }
 
-createIfNotExist(USERS_PATH, {})
-const usersModel = require(USERS_PATH)
-
 router.get('/code', async (ctx, next) => {
   const code = ctx.request.query.code
   const { client_id, client_secret } = oAuthConfig
@@ -37,26 +34,25 @@ router.get('/code', async (ctx, next) => {
     .then(res => res.json())
   ctx.cookies.set('github_token', access_token)
 
-  // 获取 githun 用户信息
-  const { id, login } = await fetch(`https://api.github.com/user?access_token=${access_token}`).then(res => res.json())
-  if (usersModel[login]) {
-    // 如果之前用户已经存在，则只更新 session
-    usersModel[login].access_token = access_token
-  } else {
-    // 否则保存一个新的用户信息
-    usersModel[login] = {
-      id,
-      access_token,
-      notify: {
-        state: true,
-        time: [
-          '00:00',
-          '24:00'
-        ]
-      }
+  try {
+    // 获取 githun 用户信息
+    const { id, login } = await fetch(`https://api.github.com/user?access_token=${access_token}`).then(res => res.json())
+    let user = await User.findOne({ name: login })
+    if (user) {
+      // 如果之前用户已经存在，则只更新 session
+      user.access_token = access_token
+    } else {
+      // 否则保存一个新的用户信息
+      user = new User({
+        githubId: id,
+        access_token,
+        name: login
+      })
     }
+    await user.save()
+  } catch (e) {
+    console.log('get github info error: ', e)
   }
-  await promisify(fs.writeFile)(USERS_PATH, JSON.stringify(usersModel, null, '  '))
   
   // TODO: 重定向到原来的地址
   ctx.redirect('http://localhost:8080')
@@ -66,11 +62,10 @@ router.get('/auth', async (ctx, next) => {
   const githubToken = ctx.cookies.get('github_token')
   if (githubToken) {
     let body = {}
-    for (let name in usersModel) {
-      if (usersModel[name].access_token === githubToken) {
-        body = Object.assign({ name }, usersModel[name])
-        break
-      }
+    try {
+      body = (await User.findOne({ access_token: githubToken })).toJSON()
+    } catch (e) {
+      console.log('auth set info error: ', e)
     }
     ctx.body = body
   } else {
@@ -82,12 +77,14 @@ router.get('/auth', async (ctx, next) => {
 router.post('/setting/user/:name', async (ctx, next) => {
   const { name } = ctx.params
   const data = ctx.request.fields
-  if (usersModel[name]) {
-    usersModel[name].notify = Object.assign(usersModel[name].notify, data)
-    await promisify(fs.writeFile)(USERS_PATH, JSON.stringify(usersModel, null, '  '))
+  try {
+    const user = await User.findOne({ name })
+    user.notify = Object.assign(user.notify, data)
+    await user.save()
     ctx.body = '更新成功'
-  } else {
-    ctx.body = '用户不存在'
+  } catch (e) {
+    console.log('update user info error: ', e)
+    ctx.body = '更新失败'
   }
 })
 

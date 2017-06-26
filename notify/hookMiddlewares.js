@@ -2,10 +2,8 @@ const { PULL_REQUEST, PULL_REQUEST_REVIEW, ISSUE_COMMENT } = require('./constant
 const { binding } = require('./bootstrap/binding')
 const MessageQueue = require('./lib/MessageQueue')
 
-const { createIfNotExist } = require('../share/utils')
-const { USERS_PATH } = require('../share/paths')
-const { promisify } = require('util')
-const fs = require('fs')
+// Model
+const User = require('../model/User')
 
 function processPullRequest (payload, wechatBot) {
   const allowedActions = ['opened', 'synchronize']
@@ -52,11 +50,10 @@ async function processIssueComment (payload, wechatBot) {
 }
 
 // 根据用户的通知设置（是否开启通知／通知时段），判断此时是否发送通知
-async function canNotify (user) {
-  // TODO: 使用数据库存储
-  const usersModel = JSON.parse(await promisify(fs.readFile)(USERS_PATH))
-  if (usersModel[user]) {
-    const { state, time: [ start, end ] } = usersModel[user].notify
+async function canNotify (name) {
+  try {
+    const user = await User.findOne({ name })
+    const { state, time: [ start, end ] } = user
     const currentHour = new Date().getHours()
     if (!state) {
       // 不开启通知
@@ -67,7 +64,7 @@ async function canNotify (user) {
     } else {
       return true
     }
-  } else {
+  } catch (e) {
     return true
   }
 }
