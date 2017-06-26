@@ -52,7 +52,11 @@ async function processIssueComment (payload, wechatBot) {
 // 根据用户的通知设置（是否开启通知／通知时段），判断此时是否发送通知
 async function canNotify (name) {
   try {
-    const user = (await User.findOne({ name })).toJSON()
+    // 用户没有进行 github 认证
+    let user = await User.findOne({ name })
+    if (!user) return true
+
+    user = user.toJSON()
     const { state, time: [ start, end ] } = user.notify
     const currentHour = new Date().getHours()
     if (state && currentHour >= parseInt(start) && currentHour < parseInt(end)) {
